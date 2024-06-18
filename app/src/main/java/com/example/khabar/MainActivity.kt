@@ -14,14 +14,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.khabar.domain.usecases.AppEntryUseCases
 import com.example.khabar.presentation.onboarding.OnboardingScreen
 import com.example.khabar.ui.theme.KhabarTheme
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var appEntryUseCases: AppEntryUseCases
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         installSplashScreen()
+        checkForOnboarding()
         setContent {
             KhabarTheme {
                 Box(
@@ -29,6 +39,15 @@ class MainActivity : ComponentActivity() {
                 ){
                     OnboardingScreen()
                 }
+            }
+        }
+    }
+
+    private fun checkForOnboarding() {
+        lifecycleScope.launch {
+            val readAppEntryFlow = appEntryUseCases.readAppEntry.invoke()
+            readAppEntryFlow.collect{ status ->
+                println("___________$status")
             }
         }
     }
